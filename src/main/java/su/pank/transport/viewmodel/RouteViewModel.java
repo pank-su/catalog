@@ -14,7 +14,7 @@ import java.util.List;
 public class RouteViewModel {
     private final DatabaseManager dbManager;
     private final RouteLinkedList routes;
-    private final ObservableList<Route> observableRoutes;
+    private final ObservableList<Route> observableRoutes; // Список для отображения
 
     public RouteViewModel(DatabaseManager dbManager) {
         this.dbManager = dbManager;
