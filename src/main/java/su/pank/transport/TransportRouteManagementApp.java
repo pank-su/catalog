@@ -2,33 +2,27 @@ package su.pank.transport;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.*;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import java.io.*;
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import su.pank.transport.db.DatabaseManager;
 import su.pank.transport.model.Route;
 import su.pank.transport.model.RoutePoint;
 import su.pank.transport.viewmodel.RouteViewModel;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Public Transport Route Management Desktop Application
@@ -61,8 +55,6 @@ public class TransportRouteManagementApp extends Application {
         stage.setOnCloseRequest(e -> dbManager.close());
         stage.show();
     }
-
-
 
 
     // ==================== VIEWS ====================
@@ -217,7 +209,7 @@ public class TransportRouteManagementApp extends Application {
         });
 
         table.getColumns().addAll(idCol, startCol, endCol);
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         // Row click handler for edit
         table.setRowFactory(tv -> {
@@ -257,10 +249,13 @@ public class TransportRouteManagementApp extends Application {
         Button exportBtn = new Button("Экспорт CSV");
         exportBtn.setOnAction(e -> exportToCSV());
 
+        Button importBtn = new Button("Импорт CSV");
+        importBtn.setOnAction(e -> importFromCSV());
+
         Button depotsBtn = new Button("Управление депо");
         depotsBtn.setOnAction(e -> showDepotsDialog());
 
-        HBox bar = new HBox(10, sortBtn, deleteBtn, exportBtn, depotsBtn);
+        HBox bar = new HBox(10, sortBtn, deleteBtn, exportBtn, importBtn, depotsBtn);
         bar.setAlignment(Pos.CENTER);
         return bar;
     }
@@ -512,7 +507,7 @@ public class TransportRouteManagementApp extends Application {
 
         dialog.getDialogPane().setContent(grid);
 
-        Platform.runLater(() -> localityField.requestFocus());
+        Platform.runLater(localityField::requestFocus);
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == addButtonType) {
@@ -551,6 +546,24 @@ public class TransportRouteManagementApp extends Application {
         }
     }
 
+    private void importFromCSV() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Импорт из CSV");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("CSV файлы", "*.csv")
+        );
+        File file = fileChooser.showOpenDialog(primaryStage);
+
+        if (file != null) {
+            try {
+                viewModel.importFromCSV(file);
+                showAlert("Успех", "Данные импортированы из " + file.getName());
+            } catch (IOException e) {
+                showAlert("Ошибка", "Не удалось импортировать данные: " + e.getMessage());
+            }
+        }
+    }
+
     private void showAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
@@ -561,23 +574,23 @@ public class TransportRouteManagementApp extends Application {
 
     private String getCSS() {
         return """
-            .table-view {
-                -fx-background-color: white;
-            }
-            .table-view .column-header {
-                -fx-background-color: #E3E9EA;
-                -fx-text-fill: black;
-            }
-            .button {
-                -fx-background-color: #CCE8EA;
-                -fx-text-fill: black;
-                -fx-padding: 8 16;
-                -fx-background-radius: 6;
-            }
-            .button:hover {
-                -fx-background-color: #B0D4D7;
-            }
-        """.replaceAll("\n", "");
+                    .table-view {
+                        -fx-background-color: white;
+                    }
+                    .table-view .column-header {
+                        -fx-background-color: #E3E9EA;
+                        -fx-text-fill: black;
+                    }
+                    .button {
+                        -fx-background-color: #CCE8EA;
+                        -fx-text-fill: black;
+                        -fx-padding: 8 16;
+                        -fx-background-radius: 6;
+                    }
+                    .button:hover {
+                        -fx-background-color: #B0D4D7;
+                    }
+                """.replaceAll("\n", "");
     }
 
     public static void main(String[] args) {

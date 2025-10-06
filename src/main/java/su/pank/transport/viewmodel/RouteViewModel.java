@@ -90,6 +90,67 @@ public class RouteViewModel {
         }
     }
 
+    public void importFromCSV(File file) throws IOException {
+        List<RoutePoint> allPoints = getAllRoutePoints();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line = reader.readLine(); // Skip header
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1); // Split CSV with quotes
+                if (parts.length < 6) continue;
+                try {
+                    int routeNumber = Integer.parseInt(parts[1].trim());
+                    String startPointStr = parts[2].replaceAll("^\"|\"$", "").trim();
+                    String endPointStr = parts[3].replaceAll("^\"|\"$", "").trim();
+                    String specialCategory = parts[4].replaceAll("^\"|\"$", "").trim();
+
+                    RoutePoint startPoint = findOrCreateRoutePoint(startPointStr, allPoints);
+                    RoutePoint endPoint = findOrCreateRoutePoint(endPointStr, allPoints);
+
+                    Route route = new Route(0, routeNumber, startPoint, endPoint, specialCategory);
+                    if (!addRoute(route)) {
+                        // Route with this number already exists, skip
+                    }
+                } catch (Exception e) {
+                    // Skip invalid lines
+                }
+            }
+        }
+        loadAllRoutes(); // Refresh the list
+    }
+
+    private RoutePoint findOrCreateRoutePoint(String pointStr, List<RoutePoint> allPoints) {
+        // Parse "description (locality, district)"
+        String description = pointStr;
+        String locality = "";
+        String district = "";
+        if (pointStr.contains("(") && pointStr.contains(")")) {
+            int openParen = pointStr.lastIndexOf("(");
+            int closeParen = pointStr.lastIndexOf(")");
+            if (openParen < closeParen) {
+                description = pointStr.substring(0, openParen).trim();
+                String locDist = pointStr.substring(openParen + 1, closeParen);
+                String[] locDistParts = locDist.split(",");
+                if (locDistParts.length >= 2) {
+                    locality = locDistParts[0].trim();
+                    district = locDistParts[1].trim();
+                }
+            }
+        }
+
+        // Find existing
+        for (RoutePoint p : allPoints) {
+            if (p.getDescription().equals(description)) {
+                return p;
+            }
+        }
+
+        // Create new
+        RoutePoint newPoint = new RoutePoint(0, locality, district, description);
+        addRoutePoint(newPoint);
+        allPoints.add(newPoint);
+        return newPoint;
+    }
+
     public void saveToFile(File file) throws IOException {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
             List<Route> routeList = routes.toList();
