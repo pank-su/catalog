@@ -10,6 +10,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -127,10 +128,10 @@ public class TransportRouteManagementApp extends Application {
         TableView<Route> table = new TableView<>();
         table.setStyle("-fx-background-color: white; -fx-background-radius: 12;");
 
-        // ID Column with colored badge
+        // ID Column with colored badge and categories
         TableColumn<Route, Integer> idCol = new TableColumn<>("Id");
         idCol.setCellValueFactory(new PropertyValueFactory<>("routeNumber"));
-        idCol.setPrefWidth(60);
+        idCol.setPrefWidth(120);
         idCol.setCellFactory(col -> new TableCell<Route, Integer>() {
             @Override
             protected void updateItem(Integer item, boolean empty) {
@@ -139,14 +140,35 @@ public class TransportRouteManagementApp extends Application {
                     setGraphic(null);
                 } else {
                     Route route = getTableView().getItems().get(getIndex());
-                    Label badge = new Label(item.toString());
-                    badge.setStyle(String.format(
+                    HBox hbox = new HBox(4);
+                    hbox.setAlignment(Pos.CENTER);
+
+                    // Route number badge
+                    Label numberBadge = new Label(item.toString());
+                    numberBadge.setStyle(String.format(
                             "-fx-background-color: %s; -fx-background-radius: 33; " +
-                                    "-fx-padding: 0 12; -fx-text-fill: %s; " +
+                                    "-fx-padding: 0 8; -fx-text-fill: %s; " +
                                     "-fx-font-family: 'Roboto'; -fx-font-weight: 500; -fx-font-size: 11;",
                             route.getBadgeColor(), route.getTextColor()
                     ));
-                    setGraphic(badge);
+
+                    hbox.getChildren().add(numberBadge);
+
+                    // Category badges
+                    for (String cat : route.getSpecialCategories()) {
+                        Label catBadge = new Label(cat);
+                        catBadge.setStyle(String.format(
+                                "-fx-background-color: %s; -fx-background-radius: 33; " +
+                                        "-fx-padding: 0 6; -fx-text-fill: %s; " +
+                                        "-fx-font-family: 'Roboto'; -fx-font-weight: 500; -fx-font-size: 9;",
+                                route.getCategoryColor(cat), route.getCategoryTextColor(cat)
+                        ));
+                        Tooltip tooltip = new Tooltip(getCategoryName(cat));
+                        Tooltip.install(catBadge, tooltip);
+                        hbox.getChildren().add(catBadge);
+                    }
+
+                    setGraphic(hbox);
                     setAlignment(Pos.CENTER);
                 }
             }
@@ -155,12 +177,20 @@ public class TransportRouteManagementApp extends Application {
         // Start Point Column
         TableColumn<Route, RoutePoint> startCol = new TableColumn<>("Начальный пункт");
         startCol.setCellValueFactory(new PropertyValueFactory<>("startPoint"));
-        startCol.setPrefWidth(260);
         startCol.setCellFactory(col -> new TableCell<Route, RoutePoint>() {
             @Override
             protected void updateItem(RoutePoint item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getDescription());
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    Label descLabel = new Label(item.getDescription());
+                    Label locLabel = new Label(" (" + item.getLocality() + ", " + item.getDistrict() + ")");
+                    locLabel.setStyle("-fx-text-fill: gray;");
+                    HBox hbox = new HBox(descLabel, locLabel);
+                    hbox.setAlignment(Pos.CENTER);
+                    setGraphic(hbox);
+                }
                 setAlignment(Pos.CENTER);
             }
         });
@@ -168,17 +198,26 @@ public class TransportRouteManagementApp extends Application {
         // End Point Column
         TableColumn<Route, RoutePoint> endCol = new TableColumn<>("Конечный пункт");
         endCol.setCellValueFactory(new PropertyValueFactory<>("endPoint"));
-        endCol.setPrefWidth(260);
         endCol.setCellFactory(col -> new TableCell<Route, RoutePoint>() {
             @Override
             protected void updateItem(RoutePoint item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getDescription());
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    Label descLabel = new Label(item.getDescription());
+                    Label locLabel = new Label(" (" + item.getLocality() + ", " + item.getDistrict() + ")");
+                    locLabel.setStyle("-fx-text-fill: gray;");
+                    HBox hbox = new HBox(descLabel, locLabel);
+                    hbox.setAlignment(Pos.CENTER);
+                    setGraphic(hbox);
+                }
                 setAlignment(Pos.CENTER);
             }
         });
 
         table.getColumns().addAll(idCol, startCol, endCol);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         // Row click handler for edit
         table.setRowFactory(tv -> {
@@ -238,12 +277,12 @@ public class TransportRouteManagementApp extends Application {
                 Route found = viewModel.searchByRouteNumber(routeNumber);
                 if (found != null) {
                     showAlert("Найден маршрут", String.format(
-                            "Маршрут №%d\nТип: %s\nОт: %s\nДо: %s\nКатегория: %s",
+                            "Маршрут №%d\nТип: %s\nОт: %s\nДо: %s\nКатегории: %s",
                             found.getRouteNumber(),
                             found.getRouteType(),
                             found.getStartPoint().getDescription(),
                             found.getEndPoint().getDescription(),
-                            found.getSpecialCategory().isEmpty() ? "Нет" : found.getSpecialCategory()
+                            found.getSpecialCategories().isEmpty() ? "Нет" : String.join(", ", found.getSpecialCategories())
                     ));
                 } else {
                     showAlert("Не найдено", "Маршрут с номером " + routeNumber + " не найден");
@@ -282,13 +321,21 @@ public class TransportRouteManagementApp extends Application {
             numField.setText(String.valueOf(existingRoute.getRouteNumber()));
         }
 
-        // Category
-        Label catLabel = new Label("Категория");
-        ComboBox<String> catCombo = new ComboBox<>();
-        catCombo.getItems().addAll("", "K - Коммерческий", "S - Экспресс", "M - Ночной");
-        catCombo.setStyle("-fx-background-color: #CCE8EA; -fx-background-radius: 6;");
-        if (existingRoute != null && !existingRoute.getSpecialCategory().isEmpty()) {
-            catCombo.setValue(existingRoute.getSpecialCategory() + " - " + getCategoryName(existingRoute.getSpecialCategory()));
+        // Categories
+        Label catLabel = new Label("Категории");
+        VBox catBox = new VBox(5);
+        CheckBox kCheck = new CheckBox("K - Коммерческий");
+        CheckBox sCheck = new CheckBox("S - Экспресс");
+        CheckBox mCheck = new CheckBox("M - Ночной");
+        catBox.getChildren().addAll(kCheck, sCheck, mCheck);
+        if (existingRoute != null) {
+            for (String cat : existingRoute.getSpecialCategories()) {
+                switch (cat) {
+                    case "K" -> kCheck.setSelected(true);
+                    case "S" -> sCheck.setSelected(true);
+                    case "M" -> mCheck.setSelected(true);
+                }
+            }
         }
 
         // Depot ComboBoxes
@@ -312,7 +359,7 @@ public class TransportRouteManagementApp extends Application {
         grid.add(numLabel, 0, row);
         grid.add(numField, 1, row);
         grid.add(catLabel, 2, row);
-        grid.add(catCombo, 3, row);
+        grid.add(catBox, 3, row);
 
         row++;
         grid.add(new Label("Начальный пункт"), 0, row, 2, 1);
@@ -342,14 +389,13 @@ public class TransportRouteManagementApp extends Application {
                     return;
                 }
 
-                String category = "";
-                String catValue = catCombo.getValue();
-                if (catValue != null && !catValue.isEmpty()) {
-                    category = catValue.substring(0, 1);
-                }
+                List<String> categories = new ArrayList<>();
+                if (kCheck.isSelected()) categories.add("K");
+                if (sCheck.isSelected()) categories.add("S");
+                if (mCheck.isSelected()) categories.add("M");
 
                 if (existingRoute == null) {
-                    Route newRoute = new Route(0, routeNum, start, end, category);
+                    Route newRoute = new Route(0, routeNum, start, end, String.join(",", categories));
                     if (viewModel.addRoute(newRoute)) {
                         dialog.close();
                     } else {
@@ -359,7 +405,7 @@ public class TransportRouteManagementApp extends Application {
                     existingRoute.setRouteNumber(routeNum);
                     existingRoute.setStartPoint(start);
                     existingRoute.setEndPoint(end);
-                    existingRoute.setSpecialCategory(category);
+                    existingRoute.setSpecialCategories(categories);
                     if (viewModel.updateRoute(existingRoute)) {
                         dialog.close();
                     } else {

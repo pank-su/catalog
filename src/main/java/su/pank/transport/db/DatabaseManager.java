@@ -29,18 +29,18 @@ public class DatabaseManager {
             )
         """;
 
-        String createRoutes = """
-            CREATE TABLE routes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                route_number INTEGER NOT NULL CHECK(route_number >= 1 AND route_number <= 999),
-                start_point_id INTEGER NOT NULL,
-                end_point_id INTEGER NOT NULL,
-                special_category CHAR(1),
-                FOREIGN KEY(start_point_id) REFERENCES route_points(id),
-                FOREIGN KEY(end_point_id) REFERENCES route_points(id),
-                UNIQUE(route_number)
-            )
-        """;
+         String createRoutes = """
+             CREATE TABLE routes (
+                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 route_number INTEGER NOT NULL CHECK(route_number >= 1 AND route_number <= 999),
+                 start_point_id INTEGER NOT NULL,
+                 end_point_id INTEGER NOT NULL,
+                 special_category VARCHAR(255),
+                 FOREIGN KEY(start_point_id) REFERENCES route_points(id),
+                 FOREIGN KEY(end_point_id) REFERENCES route_points(id),
+                 UNIQUE(route_number)
+             )
+         """;
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              Statement stmt = conn.createStatement()) {
@@ -152,13 +152,13 @@ public class DatabaseManager {
     public boolean addRoute(Route route) {
         String sql = "INSERT INTO routes (route_number, start_point_id, end_point_id, special_category) VALUES (?, ?, ?, ?)";
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, route.getRouteNumber());
             pstmt.setInt(2, route.getStartPoint().getId());
             pstmt.setInt(3, route.getEndPoint().getId());
-            String cat = route.getSpecialCategory();
+            String cat = route.getSpecialCategoryString();
             if (cat == null || cat.isEmpty()) {
-                pstmt.setNull(4, Types.CHAR);
+                pstmt.setNull(4, Types.VARCHAR);
             } else {
                 pstmt.setString(4, cat);
             }
@@ -173,13 +173,13 @@ public class DatabaseManager {
     public boolean updateRoute(Route route) {
         String sql = "UPDATE routes SET route_number = ?, start_point_id = ?, end_point_id = ?, special_category = ? WHERE id = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, route.getRouteNumber());
             pstmt.setInt(2, route.getStartPoint().getId());
             pstmt.setInt(3, route.getEndPoint().getId());
-            String cat = route.getSpecialCategory();
+            String cat = route.getSpecialCategoryString();
             if (cat == null || cat.isEmpty()) {
-                pstmt.setNull(4, Types.CHAR);
+                pstmt.setNull(4, Types.VARCHAR);
             } else {
                 pstmt.setString(4, cat);
             }

@@ -1,13 +1,18 @@
 package su.pank.transport.model;
 
 import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class Route {
     private final IntegerProperty id;
     private final IntegerProperty routeNumber;
     private final ObjectProperty<RoutePoint> startPoint;
     private final ObjectProperty<RoutePoint> endPoint;
-    private final StringProperty specialCategory;
+    private final ObservableList<String> specialCategories;
     private final StringProperty routeType;
 
     public Route(int id, int routeNumber, RoutePoint startPoint, RoutePoint endPoint, String specialCategory) {
@@ -15,7 +20,10 @@ public class Route {
         this.routeNumber = new SimpleIntegerProperty(routeNumber);
         this.startPoint = new SimpleObjectProperty<>(startPoint);
         this.endPoint = new SimpleObjectProperty<>(endPoint);
-        this.specialCategory = new SimpleStringProperty(specialCategory != null ? specialCategory : "");
+        this.specialCategories = FXCollections.observableArrayList();
+        if (specialCategory != null && !specialCategory.isEmpty()) {
+            this.specialCategories.addAll(Arrays.asList(specialCategory.split(",")));
+        }
         this.routeType = new SimpleStringProperty(determineRouteType(routeNumber));
     }
 
@@ -43,9 +51,14 @@ public class Route {
     public void setEndPoint(RoutePoint value) { endPoint.set(value); }
     public ObjectProperty<RoutePoint> endPointProperty() { return endPoint; }
 
-    public String getSpecialCategory() { return specialCategory.get(); }
-    public void setSpecialCategory(String value) { specialCategory.set(value); }
-    public StringProperty specialCategoryProperty() { return specialCategory; }
+    public ObservableList<String> getSpecialCategories() { return specialCategories; }
+    public void setSpecialCategories(List<String> categories) {
+        specialCategories.clear();
+        specialCategories.addAll(categories);
+    }
+    public String getSpecialCategoryString() {
+        return String.join(",", specialCategories);
+    }
 
     public String getRouteType() { return routeType.get(); }
     public StringProperty routeTypeProperty() { return routeType; }
@@ -64,5 +77,23 @@ public class Route {
         else if (num >= 200 && num <= 299) return "#3B4279";
         else if (num >= 300 && num <= 399) return "#534600";
         return "#161D1D";
+    }
+
+    public String getCategoryColor(String category) {
+        return switch (category) {
+            case "K" -> "#FF6B6B"; // Red for Commercial
+            case "S" -> "#4ECDC4"; // Teal for Express
+            case "M" -> "#45B7D1"; // Blue for Night
+            default -> "#95A5A6"; // Grey for unknown
+        };
+    }
+
+    public String getCategoryTextColor(String category) {
+        return switch (category) {
+            case "K" -> "#721C24"; // Dark red
+            case "S" -> "#0E6251"; // Dark teal
+            case "M" -> "#1B4F72"; // Dark blue
+            default -> "#34495E"; // Dark grey
+        };
     }
 }

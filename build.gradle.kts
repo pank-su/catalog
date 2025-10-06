@@ -3,7 +3,7 @@ plugins {
     id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
-group = "com.transport"
+group = "su.pank.transport"
 version = "1.0-SNAPSHOT"
 
 java {

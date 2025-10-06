@@ -83,7 +83,7 @@ public class RouteViewModel {
                         r.getRouteNumber(),
                         r.getStartPoint().toString(),
                         r.getEndPoint().toString(),
-                        r.getSpecialCategory(),
+                        r.getSpecialCategoryString(),
                         r.getRouteType()
                 ));
             }
@@ -98,7 +98,7 @@ public class RouteViewModel {
                 oos.writeInt(route.getRouteNumber());
                 oos.writeInt(route.getStartPoint().getId());
                 oos.writeInt(route.getEndPoint().getId());
-                oos.writeUTF(route.getSpecialCategory());
+                oos.writeUTF(route.getSpecialCategoryString());
             }
         }
     }
