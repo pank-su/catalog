@@ -25,7 +25,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("su.pank.transport.TransportRouteManagementApp")
+    mainClass.set("su.pank.transport.app.TransportRouteManagementApp")
 }
 
 tasks.named<JavaExec>("run") {

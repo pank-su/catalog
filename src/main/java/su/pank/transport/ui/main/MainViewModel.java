@@ -1,9 +1,11 @@
-package su.pank.transport.viewmodel;
+package su.pank.transport.ui.main;
 
-import su.pank.transport.db.DatabaseManager;
-import su.pank.transport.model.Route;
-import su.pank.transport.model.RouteLinkedList;
-import su.pank.transport.model.RoutePoint;
+import su.pank.transport.data.repository.RoutePointRepository;
+import su.pank.transport.data.repository.RouteRepository;
+import su.pank.transport.data.models.Route;
+import su.pank.transport.domain.RouteLinkedList;
+import su.pank.transport.data.models.RoutePoint;
+import su.pank.transport.data.models.Category;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,35 +13,45 @@ import javafx.collections.ObservableList;
 import java.io.*;
 import java.util.List;
 
-public class RouteViewModel {
-    private final DatabaseManager dbManager;
-    private final RouteLinkedList routes;
-    private final ObservableList<Route> observableRoutes; // Список для отображения
+public class MainViewModel {
+    private final RouteRepository routeRepository;
+    private final RoutePointRepository routePointRepository;
 
-    public RouteViewModel(DatabaseManager dbManager) {
-        this.dbManager = dbManager;
+    private final RouteLinkedList routes;
+    private final ObservableList<RouteUI> observableRoutes;
+
+    public MainViewModel(RouteRepository routeRepository, RoutePointRepository routePointRepository) {
+        this.routeRepository = routeRepository;
+        this.routePointRepository = routePointRepository;
+
         this.routes = new RouteLinkedList();
         this.observableRoutes = FXCollections.observableArrayList();
     }
 
+    public void initialize() {
+        routeRepository.initialize();
+        routePointRepository.initialize();
+        loadAllRoutes();
+    }
+
     public void loadAllRoutes() {
         routes.clear();
-        RouteLinkedList dbRoutes = dbManager.getAllRoutes();
+        RouteLinkedList dbRoutes = routeRepository.getAllRoutes();
 
         observableRoutes.clear();
         for (int i = 0; i < dbRoutes.size(); i++) {
             Route route = dbRoutes.get(i);
             routes.add(route);
-            observableRoutes.add(route);
+            observableRoutes.add(new RouteUI(route));
         }
     }
 
-    public ObservableList<Route> getObservableRoutes() {
+    public ObservableList<RouteUI> getObservableRoutes() {
         return observableRoutes;
     }
 
     public boolean addRoute(Route route) {
-        if (dbManager.addRoute(route)) {
+        if (routeRepository.addRoute(route)) {
             loadAllRoutes();
             return true;
         }
@@ -47,7 +59,7 @@ public class RouteViewModel {
     }
 
     public boolean updateRoute(Route route) {
-        if (dbManager.updateRoute(route)) {
+        if (routeRepository.updateRoute(route)) {
             loadAllRoutes();
             return true;
         }
@@ -55,9 +67,9 @@ public class RouteViewModel {
     }
 
     public boolean deleteRoute(Route route) {
-        if (dbManager.deleteRoute(route.getId())) {
+        if (routeRepository.deleteRoute(route.getId())) {
             routes.remove(route);
-            observableRoutes.remove(route);
+            observableRoutes.removeIf(rpm -> rpm.getRoute().getId() == route.getId());
             return true;
         }
         return false;
@@ -70,7 +82,7 @@ public class RouteViewModel {
     public void sortByRouteNumber() {
         routes.insertionSort();
         observableRoutes.clear();
-        observableRoutes.addAll(routes.toList());
+        observableRoutes.addAll(routes.toList().stream().map(RouteUI::new).toList());
     }
 
     public void exportToCSV(File file) throws IOException {
@@ -81,8 +93,8 @@ public class RouteViewModel {
                 writer.write(String.format("%d,%d,\"%s\",\"%s\",\"%s\",\"%s\"\n",
                         r.getId(),
                         r.getRouteNumber(),
-                        r.getStartPoint().toString(),
-                        r.getEndPoint().toString(),
+                        r.getStartDescription() + " (" + r.getStartLocality() + ", " + r.getStartDistrict() + ")",
+                        r.getEndDescription() + " (" + r.getEndLocality() + ", " + r.getEndDistrict() + ")",
                         r.getSpecialCategoryString(),
                         r.getRouteType()
                 ));
@@ -106,7 +118,10 @@ public class RouteViewModel {
                     RoutePoint startPoint = findOrCreateRoutePoint(startPointStr, allPoints);
                     RoutePoint endPoint = findOrCreateRoutePoint(endPointStr, allPoints);
 
-                    Route route = new Route(0, routeNumber, startPoint, endPoint, specialCategory);
+                    Route route = new Route(0, routeNumber, startPoint.getId(), startPoint.getLocality(),
+                            startPoint.getDistrict(), startPoint.getDescription(),
+                            endPoint.getId(), endPoint.getLocality(), endPoint.getDistrict(),
+                            endPoint.getDescription(), specialCategory);
                     if (!addRoute(route)) {
                         // Route with this number already exists, skip
                     }
@@ -151,28 +166,27 @@ public class RouteViewModel {
         return newPoint;
     }
 
-    public void saveToFile(File file) throws IOException {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
-            List<Route> routeList = routes.toList();
-            oos.writeInt(routeList.size());
-            for (Route route : routeList) {
-                oos.writeInt(route.getRouteNumber());
-                oos.writeInt(route.getStartPoint().getId());
-                oos.writeInt(route.getEndPoint().getId());
-                oos.writeUTF(route.getSpecialCategoryString());
-            }
-        }
-    }
-
     public List<RoutePoint> getAllRoutePoints() {
-        return dbManager.getAllRoutePoints();
+        return routePointRepository.getAllRoutePoints();
     }
 
     public boolean addRoutePoint(RoutePoint point) {
-        return dbManager.addRoutePoint(point);
+        return routePointRepository.addRoutePoint(point);
     }
 
     public boolean deleteRoutePoint(RoutePoint point) {
-        return dbManager.deleteRoutePoint(point.getId());
+        return routePointRepository.deleteRoutePoint(point.getId());
+    }
+
+    public List<Category> getAllCategories() {
+        return routeRepository.getAllCategories();
+    }
+
+    public RouteRepository getRouteRepository() {
+        return routeRepository;
+    }
+
+    public RoutePointRepository getRoutePointRepository() {
+        return routePointRepository;
     }
 }

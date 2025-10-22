@@ -1,4 +1,4 @@
-package su.pank.transport.model;
+package su.pank.transport.data.models;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;

@@ -1,0 +1,283 @@
+package su.pank.transport.data.repository;
+
+import su.pank.transport.data.models.Category;
+import su.pank.transport.data.models.Route;
+import su.pank.transport.domain.RouteLinkedList;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class RouteRepository {
+    private static final String DB_URL = "jdbc:sqlite:transport_routes.db";
+
+    public void initialize() {
+        createTables();
+        initializeDefaultCategories();
+    }
+
+    private void createTables() {
+        String createCategories = """
+            CREATE TABLE IF NOT EXISTS categories (
+                code VARCHAR(1) PRIMARY KEY,
+                name VARCHAR(50) NOT NULL,
+                bg_color VARCHAR(7) NOT NULL CHECK(LENGTH(bg_color) = 7 AND bg_color LIKE '#%'),
+                text_color VARCHAR(7) NOT NULL CHECK(LENGTH(text_color) = 7 AND text_color LIKE '#%')
+            )
+        """;
+
+        String createRouteCategories = """
+            CREATE TABLE IF NOT EXISTS route_categories (
+                route_id INTEGER NOT NULL,
+                category_code VARCHAR(1) NOT NULL,
+                PRIMARY KEY(route_id, category_code),
+                FOREIGN KEY(route_id) REFERENCES routes(id),
+                FOREIGN KEY(category_code) REFERENCES categories(code)
+            )
+        """;
+
+        String createRoutes = """
+            CREATE TABLE IF NOT EXISTS routes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                route_number INTEGER NOT NULL CHECK(route_number >= 1 AND route_number <= 999),
+                start_point_id INTEGER NOT NULL,
+                end_point_id INTEGER NOT NULL,
+                FOREIGN KEY(start_point_id) REFERENCES route_points(id),
+                FOREIGN KEY(end_point_id) REFERENCES route_points(id),
+                UNIQUE(route_number)
+            )
+        """;
+
+        String createFullRouteInfoView = """
+            CREATE VIEW IF NOT EXISTS full_route_info AS
+            SELECT
+                r.id AS route_id,
+                r.route_number,
+                sp.description AS start_point_desc,
+                sp.locality AS start_point_loc,
+                ep.description AS end_point_desc,
+                ep.locality AS end_point_loc,
+                GROUP_CONCAT(c.name, ', ') AS categories
+            FROM routes r
+            JOIN route_points sp ON r.start_point_id = sp.id
+            JOIN route_points ep ON r.end_point_id = ep.id
+            LEFT JOIN route_categories rc ON r.id = rc.route_id
+            LEFT JOIN categories c ON rc.category_code = c.code
+            GROUP BY r.id, r.route_number, sp.description, sp.locality, ep.description, ep.locality
+        """;
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(createCategories);
+            stmt.execute(createRoutes);
+            stmt.execute(createRouteCategories);
+            stmt.execute(createFullRouteInfoView);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void initializeDefaultCategories() {
+        String checkSql = "SELECT COUNT(*) FROM categories";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(checkSql)) {
+
+            if (rs.next() && rs.getInt(1) == 0) {
+                String[][] categories = {
+                        {"K", "Коммерческий", "#FF6B6B", "#721C24"},
+                        {"S", "Экспресс", "#4ECDC4", "#0E6251"},
+                        {"M", "Ночной", "#45B7D1", "#1B4F72"}
+                };
+
+                String insertSql = "INSERT INTO categories (code, name, bg_color, text_color) VALUES (?, ?, ?, ?)";
+                try (PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
+                    for (String[] cat : categories) {
+                        pstmt.setString(1, cat[0]);
+                        pstmt.setString(2, cat[1]);
+                        pstmt.setString(3, cat[2]);
+                        pstmt.setString(4, cat[3]);
+                        pstmt.executeUpdate();
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public RouteLinkedList getAllRoutes() {
+        RouteLinkedList routes = new RouteLinkedList();
+        String sql = """
+            SELECT r.id, r.route_number,
+                   sp.id as sp_id, sp.locality as sp_locality, sp.district as sp_district, sp.description as sp_desc,
+                   ep.id as ep_id, ep.locality as ep_locality, ep.district as ep_district, ep.description as ep_desc
+            FROM routes r
+            JOIN route_points sp ON r.start_point_id = sp.id
+            JOIN route_points ep ON r.end_point_id = ep.id
+        """;
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                int routeId = rs.getInt("id");
+                List<String> categories = getRouteCategories(routeId);
+                Route route = new Route(
+                        routeId,
+                        rs.getInt("route_number"),
+                        rs.getInt("sp_id"),
+                        rs.getString("sp_locality"),
+                        rs.getString("sp_district"),
+                        rs.getString("sp_desc"),
+                        rs.getInt("ep_id"),
+                        rs.getString("ep_locality"),
+                        rs.getString("ep_district"),
+                        rs.getString("ep_desc"),
+                        String.join(",", categories)
+                );
+                routes.add(route);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return routes;
+    }
+
+    public boolean addRoute(Route route) {
+        String sql = "INSERT INTO routes (route_number, start_point_id, end_point_id) VALUES (?, ?, ?)";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+               PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, route.getRouteNumber());
+            pstmt.setInt(2, route.getStartPointId());
+            pstmt.setInt(3, route.getEndPointId());
+            int affectedRows = pstmt.executeUpdate();
+
+            if (affectedRows > 0) {
+                try (Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery("SELECT last_insert_rowid()")) {
+                    if (rs.next()) {
+                        int routeId = rs.getInt(1);
+                        // Add categories if any
+                        if (!route.getSpecialCategories().isEmpty()) {
+                            addRouteCategories(routeId, route.getSpecialCategories());
+                        }
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean updateRoute(Route route) {
+        String sql = "UPDATE routes SET route_number = ?, start_point_id = ?, end_point_id = ? WHERE id = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+              PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, route.getRouteNumber());
+            pstmt.setInt(2, route.getStartPointId());
+            pstmt.setInt(3, route.getEndPointId());
+            pstmt.setInt(4, route.getId());
+            int affectedRows = pstmt.executeUpdate();
+
+            if (affectedRows > 0) {
+                // Update categories
+                updateRouteCategories(route.getId(), route.getSpecialCategories());
+                return true;
+            }
+            return false;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteRoute(int routeId) {
+        String sql = "DELETE FROM routes WHERE id = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, routeId);
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<Category> getAllCategories() {
+        List<Category> categories = new ArrayList<>();
+        String sql = "SELECT code, name, bg_color, text_color FROM categories";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                categories.add(new Category(
+                        rs.getString("code"),
+                        rs.getString("name"),
+                        rs.getString("bg_color"),
+                        rs.getString("text_color")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return categories;
+    }
+
+    public boolean addRouteCategories(int routeId, List<String> categoryCodes) {
+        String sql = "INSERT INTO route_categories (route_id, category_code) VALUES (?, ?)";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            for (String code : categoryCodes) {
+                pstmt.setInt(1, routeId);
+                pstmt.setString(2, code);
+                pstmt.executeUpdate();
+            }
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean updateRouteCategories(int routeId, List<String> categoryCodes) {
+        // First delete existing
+        String deleteSql = "DELETE FROM route_categories WHERE route_id = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+            deleteStmt.setInt(1, routeId);
+            deleteStmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        // Then add new
+        return addRouteCategories(routeId, categoryCodes);
+    }
+
+    public List<String> getRouteCategories(int routeId) {
+        List<String> categories = new ArrayList<>();
+        String sql = "SELECT category_code FROM route_categories WHERE route_id = ?";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, routeId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                categories.add(rs.getString("category_code"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return categories;
+    }
+}

@@ -1,4 +1,6 @@
-package su.pank.transport.model;
+package su.pank.transport.domain;
+
+import su.pank.transport.data.models.Route;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +67,7 @@ public class RouteLinkedList {
         size = 0;
     }
 
-    // Linear Search by route number
+    // Линейный поиск по номеру маршрута
     public Route linearSearch(int routeNumber) {
         RouteNode current = head;
         while (current != null) {
@@ -77,7 +79,7 @@ public class RouteLinkedList {
         return null;
     }
 
-    // Insertion Sort by route number
+    // Сортировка вставками по номеру маршрута
     public void insertionSort() {
         if (head == null || head.next == null) return;
 

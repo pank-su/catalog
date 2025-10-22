@@ -17,9 +17,10 @@
 
 ### Package Structure
 - `su.pank.transport` - main package
-- `db` - database operations
-- `model` - data models (Route, RoutePoint, etc.)
-- `viewmodel` - MVVM view models
+- `domain` - domain models and business logic (RouteLinkedList)
+- `data/models` - data models (Route, RoutePoint, etc.)
+- `data/repository` - data access layer
+- `ui` - user interface layer (views and viewmodels)
 
 ### Naming Conventions
 - Classes: PascalCase (Route, DatabaseManager)
