@@ -5,8 +5,7 @@ import su.pank.transport.data.models.Route;
 import su.pank.transport.data.models.RoutePoint;
 import su.pank.transport.data.repository.RouteRepository;
 import su.pank.transport.data.repository.RoutePointRepository;
-
-import java.util.List;
+import su.pank.transport.domain.LinkedList;
 
 /**
  * ViewModel для диалога маршрута
@@ -20,11 +19,11 @@ public class RouteDialogViewModel {
         this.routePointRepository = routePointRepository;
     }
 
-    public List<Category> getAllCategories() {
+    public Category[] getAllCategories() {
         return routeRepository.getAllCategories();
     }
 
-    public List<RoutePoint> getAllRoutePoints() {
+    public RoutePoint[] getAllRoutePoints() {
         return routePointRepository.getAllRoutePoints();
     }
 
@@ -36,7 +35,7 @@ public class RouteDialogViewModel {
         return routeRepository.updateRoute(route);
     }
 
-    public boolean validateAndSaveRoute(String numText, RoutePoint start, RoutePoint end, List<String> selectedCategories, Route existingRoute) {
+    public boolean validateAndSaveRoute(String numText, RoutePoint start, RoutePoint end, String[] selectedCategories, Route existingRoute) {
         try {
             int routeNum = Integer.parseInt(numText);
             if (routeNum < 1 || routeNum > 999) {

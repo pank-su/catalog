@@ -3,10 +3,10 @@ package su.pank.transport.data.repository;
 import su.pank.transport.data.models.Category;
 import su.pank.transport.data.models.Route;
 import su.pank.transport.domain.RouteLinkedList;
+import su.pank.transport.domain.SimpleLinkedList;
+import su.pank.transport.domain.LinkedList;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class RouteRepository {
     private static final String DB_URL = "jdbc:sqlite:transport_routes.db";
@@ -159,9 +159,9 @@ public class RouteRepository {
                     if (rs.next()) {
                         int routeId = rs.getInt(1);
                         // Add categories if any
-                        if (!route.getSpecialCategories().isEmpty()) {
-                            addRouteCategories(routeId, route.getSpecialCategories());
-                        }
+                         if (route.getSpecialCategories().length > 0) {
+                             addRouteCategories(routeId, route.getSpecialCategories());
+                         }
                         return true;
                     }
                 }
@@ -208,21 +208,35 @@ public class RouteRepository {
         }
     }
 
-    public List<Category> getAllCategories() {
-        List<Category> categories = new ArrayList<>();
+    public Category[] getAllCategories() {
+        String countSql = "SELECT COUNT(*) FROM categories";
+        int count = 0;
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(countSql)) {
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new Category[0];
+        }
+
+        Category[] categories = new Category[count];
         String sql = "SELECT code, name, bg_color, text_color FROM categories";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
-            while (rs.next()) {
-                categories.add(new Category(
+            int index = 0;
+            while (rs.next() && index < count) {
+                categories[index++] = new Category(
                         rs.getString("code"),
                         rs.getString("name"),
                         rs.getString("bg_color"),
                         rs.getString("text_color")
-                ));
+                );
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -230,7 +244,7 @@ public class RouteRepository {
         return categories;
     }
 
-    public boolean addRouteCategories(int routeId, List<String> categoryCodes) {
+    public boolean addRouteCategories(int routeId, String[] categoryCodes) {
         String sql = "INSERT INTO route_categories (route_id, category_code) VALUES (?, ?)";
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -246,7 +260,7 @@ public class RouteRepository {
         }
     }
 
-    public boolean updateRouteCategories(int routeId, List<String> categoryCodes) {
+    public boolean updateRouteCategories(int routeId, String[] categoryCodes) {
         // First delete existing
         String deleteSql = "DELETE FROM route_categories WHERE route_id = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL);

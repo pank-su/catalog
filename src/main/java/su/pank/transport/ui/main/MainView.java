@@ -260,7 +260,7 @@ public class MainView {
                             found.getRouteType(),
                             found.getStartDescription(),
                             found.getEndDescription(),
-                            found.getSpecialCategories().isEmpty() ? "Нет" : String.join(", ", found.getSpecialCategories())
+                            found.getSpecialCategories().length == 0 ? "Нет" : String.join(", ", found.getSpecialCategories())
                     ));
                 } else {
                     showAlert("Не найдено", "Маршрут с номером " + routeNumber + " не найден");

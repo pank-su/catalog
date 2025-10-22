@@ -1,7 +1,7 @@
 package su.pank.transport.data.models;
 
-import java.util.Arrays;
-import java.util.List;
+import su.pank.transport.domain.LinkedList;
+import su.pank.transport.domain.SimpleLinkedList;
 
 public class Route {
     private int id;
@@ -14,7 +14,7 @@ public class Route {
     private String endLocality;
     private String endDistrict;
     private String endDescription;
-    private List<String> specialCategories;
+    private String[] specialCategories;
     private String routeType;
 
     public Route(int id, int routeNumber, int startPointId, String startLocality, String startDistrict, String startDescription,
@@ -30,7 +30,7 @@ public class Route {
         this.endDistrict = endDistrict;
         this.endDescription = endDescription;
         this.specialCategories = specialCategory != null && !specialCategory.isEmpty() ?
-                Arrays.asList(specialCategory.split(",")) : List.of();
+                specialCategory.split(",") : new String[0];
         this.routeType = determineRouteType(routeNumber);
     }
 
@@ -76,8 +76,8 @@ public class Route {
     public String getEndDescription() { return endDescription; }
     public void setEndDescription(String endDescription) { this.endDescription = endDescription; }
 
-    public List<String> getSpecialCategories() { return specialCategories; }
-    public void setSpecialCategories(List<String> specialCategories) { this.specialCategories = specialCategories; }
+    public String[] getSpecialCategories() { return specialCategories; }
+    public void setSpecialCategories(String[] specialCategories) { this.specialCategories = specialCategories; }
 
     public String getSpecialCategoryString() {
         return String.join(",", specialCategories);

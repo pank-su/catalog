@@ -1,10 +1,10 @@
 package su.pank.transport.data.repository;
 
 import su.pank.transport.data.models.RoutePoint;
+import su.pank.transport.domain.SimpleLinkedList;
+import su.pank.transport.domain.LinkedList;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class RoutePointRepository {
     private static final String DB_URL = "jdbc:sqlite:transport_routes.db";
@@ -64,21 +64,35 @@ public class RoutePointRepository {
         }
     }
 
-    public List<RoutePoint> getAllRoutePoints() {
-        List<RoutePoint> points = new ArrayList<>();
+    public RoutePoint[] getAllRoutePoints() {
+        String countSql = "SELECT COUNT(*) FROM route_points";
+        int count = 0;
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(countSql)) {
+            if (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new RoutePoint[0];
+        }
+
+        RoutePoint[] points = new RoutePoint[count];
         String sql = "SELECT id, locality, district, description FROM route_points";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
-            while (rs.next()) {
-                points.add(new RoutePoint(
+            int index = 0;
+            while (rs.next() && index < count) {
+                points[index++] = new RoutePoint(
                         rs.getInt("id"),
                         rs.getString("locality"),
                         rs.getString("district"),
                         rs.getString("description")
-                ));
+                );
             }
         } catch (SQLException e) {
             e.printStackTrace();

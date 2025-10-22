@@ -3,8 +3,7 @@ package su.pank.transport.ui.depots;
 import su.pank.transport.data.models.RoutePoint;
 import su.pank.transport.data.repository.RoutePointRepository;
 import su.pank.transport.ui.addDepot.AddDepotViewModel;
-
-import java.util.List;
+import su.pank.transport.domain.LinkedList;
 
 /**
  * ViewModel для управления депо
@@ -18,7 +17,7 @@ public class DepotsViewModel {
         this.addDepotViewModel = new AddDepotViewModel(routePointRepository);
     }
 
-    public List<RoutePoint> getAllRoutePoints() {
+    public RoutePoint[] getAllRoutePoints() {
         return routePointRepository.getAllRoutePoints();
     }
 

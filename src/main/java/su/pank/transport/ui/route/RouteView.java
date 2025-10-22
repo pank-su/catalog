@@ -3,6 +3,8 @@ package su.pank.transport.ui.route;
 import su.pank.transport.data.models.Category;
 import su.pank.transport.data.models.Route;
 import su.pank.transport.data.models.RoutePoint;
+import su.pank.transport.domain.LinkedList;
+import su.pank.transport.domain.SimpleLinkedList;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -13,9 +15,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -54,25 +53,24 @@ public class RouteView extends Stage {
 
         Label catLabel = new Label("Категории");
         VBox catBox = new VBox(5);
-        List<Category> allCategories = viewModel.getAllCategories();
-        List<CheckBox> checkBoxes = new ArrayList<>();
-        for (Category cat : allCategories) {
-            CheckBox checkBox = new CheckBox(cat.getCode() + " - " + cat.getName());
-            checkBoxes.add(checkBox);
-            catBox.getChildren().add(checkBox);
+        Category[] allCategories = viewModel.getAllCategories();
+        CheckBox[] checkBoxes = new CheckBox[allCategories.length];
+        for (int i = 0; i < allCategories.length; i++) {
+            checkBoxes[i] = new CheckBox(allCategories[i].getCode() + " - " + allCategories[i].getName());
+            catBox.getChildren().add(checkBoxes[i]);
         }
         if (existingRoute != null) {
             for (String catCode : existingRoute.getSpecialCategories()) {
-                for (CheckBox cb : checkBoxes) {
-                    if (cb.getText().startsWith(catCode + " - ")) {
-                        cb.setSelected(true);
+                for (int j = 0; j < allCategories.length; j++) {
+                    if (allCategories[j].getCode().equals(catCode)) {
+                        checkBoxes[j].setSelected(true);
                         break;
                     }
                 }
             }
         }
 
-        List<RoutePoint> depots = viewModel.getAllRoutePoints();
+        RoutePoint[] depots = viewModel.getAllRoutePoints();
 
         ComboBox<RoutePoint> startCombo = new ComboBox<>();
         startCombo.getItems().addAll(depots);
@@ -111,14 +109,16 @@ public class RouteView extends Stage {
             RoutePoint start = startCombo.getValue();
             RoutePoint end = endCombo.getValue();
 
-            List<String> selectedCategories = new ArrayList<>();
-            for (int i = 0; i < checkBoxes.size(); i++) {
-                if (checkBoxes.get(i).isSelected()) {
-                    selectedCategories.add(allCategories.get(i).getCode());
+            String[] selectedCategories = new String[allCategories.length];
+            int selectedCount = 0;
+            for (int i = 0; i < checkBoxes.length; i++) {
+                if (checkBoxes[i].isSelected()) {
+                    selectedCategories[selectedCount++] = allCategories[i].getCode();
                 }
             }
+            String[] finalSelected = java.util.Arrays.copyOf(selectedCategories, selectedCount);
 
-            if (viewModel.validateAndSaveRoute(numField.getText(), start, end, selectedCategories, existingRoute)) {
+            if (viewModel.validateAndSaveRoute(numField.getText(), start, end, finalSelected, existingRoute)) {
                 close();
             } else {
                 String errorMsg = existingRoute == null ?

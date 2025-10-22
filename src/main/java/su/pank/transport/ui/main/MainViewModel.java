@@ -4,6 +4,8 @@ import su.pank.transport.data.repository.RoutePointRepository;
 import su.pank.transport.data.repository.RouteRepository;
 import su.pank.transport.data.models.Route;
 import su.pank.transport.domain.RouteLinkedList;
+import su.pank.transport.domain.SimpleLinkedList;
+import su.pank.transport.domain.LinkedList;
 import su.pank.transport.data.models.RoutePoint;
 import su.pank.transport.data.models.Category;
 
@@ -11,7 +13,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.io.*;
-import java.util.List;
 
 public class MainViewModel {
     private final RouteRepository routeRepository;
@@ -82,7 +83,12 @@ public class MainViewModel {
     public void sortByRouteNumber() {
         routes.insertionSort();
         observableRoutes.clear();
-        observableRoutes.addAll(routes.toList().stream().map(RouteUI::new).toList());
+        Route[] routeArray = routes.toArray();
+        RouteUI[] routeUIArray = new RouteUI[routeArray.length];
+        for (int i = 0; i < routeArray.length; i++) {
+            routeUIArray[i] = new RouteUI(routeArray[i]);
+        }
+        observableRoutes.addAll(routeUIArray);
     }
 
     public void exportToCSV(File file) throws IOException {
@@ -103,7 +109,10 @@ public class MainViewModel {
     }
 
     public void importFromCSV(File file) throws IOException {
-        List<RoutePoint> allPoints = getAllRoutePoints();
+        LinkedList<RoutePoint> allPoints = new SimpleLinkedList<>(RoutePoint.class);
+        for (RoutePoint p : getAllRoutePoints()) {
+            allPoints.add(p);
+        }
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line = reader.readLine(); // Skip header
             while ((line = reader.readLine()) != null) {
@@ -133,7 +142,7 @@ public class MainViewModel {
         loadAllRoutes(); // Refresh the list
     }
 
-    private RoutePoint findOrCreateRoutePoint(String pointStr, List<RoutePoint> allPoints) {
+    private RoutePoint findOrCreateRoutePoint(String pointStr, LinkedList<RoutePoint> allPoints) {
         // Parse "description (locality, district)"
         String description = pointStr;
         String locality = "";
@@ -153,7 +162,7 @@ public class MainViewModel {
         }
 
         // Find existing
-        for (RoutePoint p : allPoints) {
+        for (RoutePoint p : allPoints.toArray()) {
             if (p.getDescription().equals(description)) {
                 return p;
             }
@@ -166,7 +175,7 @@ public class MainViewModel {
         return newPoint;
     }
 
-    public List<RoutePoint> getAllRoutePoints() {
+    public RoutePoint[] getAllRoutePoints() {
         return routePointRepository.getAllRoutePoints();
     }
 
@@ -178,7 +187,7 @@ public class MainViewModel {
         return routePointRepository.deleteRoutePoint(point.getId());
     }
 
-    public List<Category> getAllCategories() {
+    public Category[] getAllCategories() {
         return routeRepository.getAllCategories();
     }
 

@@ -63,7 +63,7 @@ public class RouteUI {
     public ObjectProperty<RoutePoint> endPointProperty() { return endPoint; }
 
     public ObservableList<String> getSpecialCategories() { return specialCategories; }
-    public void setSpecialCategories(java.util.List<String> categories) {
+    public void setSpecialCategories(String[] categories) {
         specialCategories.clear();
         specialCategories.addAll(categories);
         route.setSpecialCategories(categories);
