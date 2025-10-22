@@ -103,20 +103,10 @@ public class Route {
     }
 
     public String getCategoryColor(String category) {
-        return switch (category) {
-            case "K" -> "#FF6B6B"; // Red for Commercial
-            case "S" -> "#4ECDC4"; // Teal for Express
-            case "M" -> "#45B7D1"; // Blue for Night
-            default -> "#95A5A6"; // Grey for unknown
-        };
+        return su.pank.transport.data.repository.CategoryRepository.getCategoryBgColor(category);
     }
 
     public String getCategoryTextColor(String category) {
-        return switch (category) {
-            case "K" -> "#721C24"; // Dark red
-            case "S" -> "#0E6251"; // Dark teal
-            case "M" -> "#1B4F72"; // Dark blue
-            default -> "#34495E"; // Dark grey
-        };
+        return su.pank.transport.data.repository.CategoryRepository.getCategoryTextColor(category);
     }
 }

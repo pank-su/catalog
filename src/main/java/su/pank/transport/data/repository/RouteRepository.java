@@ -48,29 +48,35 @@ public class RouteRepository {
             )
         """;
 
+        String dropFullRouteInfoView = "DROP VIEW IF EXISTS full_route_info";
+
         String createFullRouteInfoView = """
-            CREATE VIEW IF NOT EXISTS full_route_info AS
+            CREATE VIEW full_route_info AS
             SELECT
                 r.id AS route_id,
                 r.route_number,
-                sp.description AS start_point_desc,
-                sp.locality AS start_point_loc,
-                ep.description AS end_point_desc,
-                ep.locality AS end_point_loc,
-                GROUP_CONCAT(c.name, ', ') AS categories
+                sp.id AS start_point_id,
+                sp.locality AS start_locality,
+                sp.district AS start_district,
+                sp.description AS start_description,
+                ep.id AS end_point_id,
+                ep.locality AS end_locality,
+                ep.district AS end_district,
+                ep.description AS end_description,
+                GROUP_CONCAT(rc.category_code, ',') AS category_codes
             FROM routes r
             JOIN route_points sp ON r.start_point_id = sp.id
             JOIN route_points ep ON r.end_point_id = ep.id
             LEFT JOIN route_categories rc ON r.id = rc.route_id
-            LEFT JOIN categories c ON rc.category_code = c.code
-            GROUP BY r.id, r.route_number, sp.description, sp.locality, ep.description, ep.locality
+            GROUP BY r.id, r.route_number, sp.id, sp.locality, sp.district, sp.description, ep.id, ep.locality, ep.district, ep.description
         """;
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             Statement stmt = conn.createStatement()) {
+              Statement stmt = conn.createStatement()) {
             stmt.execute(createCategories);
             stmt.execute(createRoutes);
             stmt.execute(createRouteCategories);
+            stmt.execute(dropFullRouteInfoView);
             stmt.execute(createFullRouteInfoView);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -108,34 +114,27 @@ public class RouteRepository {
 
     public RouteLinkedList getAllRoutes() {
         RouteLinkedList routes = new RouteLinkedList();
-        String sql = """
-            SELECT r.id, r.route_number,
-                   sp.id as sp_id, sp.locality as sp_locality, sp.district as sp_district, sp.description as sp_desc,
-                   ep.id as ep_id, ep.locality as ep_locality, ep.district as ep_district, ep.description as ep_desc
-            FROM routes r
-            JOIN route_points sp ON r.start_point_id = sp.id
-            JOIN route_points ep ON r.end_point_id = ep.id
-        """;
+        String sql = "SELECT * FROM full_route_info";
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+              Statement stmt = conn.createStatement();
+              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                int routeId = rs.getInt("id");
-                List<String> categories = getRouteCategories(routeId);
+                String categoryCodes = rs.getString("category_codes");
+                if (categoryCodes == null) categoryCodes = "";
                 Route route = new Route(
-                        routeId,
+                        rs.getInt("route_id"),
                         rs.getInt("route_number"),
-                        rs.getInt("sp_id"),
-                        rs.getString("sp_locality"),
-                        rs.getString("sp_district"),
-                        rs.getString("sp_desc"),
-                        rs.getInt("ep_id"),
-                        rs.getString("ep_locality"),
-                        rs.getString("ep_district"),
-                        rs.getString("ep_desc"),
-                        String.join(",", categories)
+                        rs.getInt("start_point_id"),
+                        rs.getString("start_locality"),
+                        rs.getString("start_district"),
+                        rs.getString("start_description"),
+                        rs.getInt("end_point_id"),
+                        rs.getString("end_locality"),
+                        rs.getString("end_district"),
+                        rs.getString("end_description"),
+                        categoryCodes
                 );
                 routes.add(route);
             }
@@ -263,21 +262,5 @@ public class RouteRepository {
         return addRouteCategories(routeId, categoryCodes);
     }
 
-    public List<String> getRouteCategories(int routeId) {
-        List<String> categories = new ArrayList<>();
-        String sql = "SELECT category_code FROM route_categories WHERE route_id = ?";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, routeId);
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                categories.add(rs.getString("category_code"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return categories;
-    }
 }
