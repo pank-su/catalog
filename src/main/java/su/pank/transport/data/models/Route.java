@@ -1,6 +1,8 @@
 package su.pank.transport.data.models;
 
 
+import su.pank.transport.data.repository.CategoryRepository;
+
 public class Route {
     private int id;
     private int routeNumber;
@@ -104,10 +106,10 @@ public class Route {
     }
 
     public String getCategoryColor(String category) {
-        return su.pank.transport.data.repository.CategoryRepository.getCategoryBgColor(category);
+        return CategoryRepository.getCategoryBgColor(category);
     }
 
     public String getCategoryTextColor(String category) {
-        return su.pank.transport.data.repository.CategoryRepository.getCategoryTextColor(category);
+        return CategoryRepository.getCategoryTextColor(category);
     }
 }

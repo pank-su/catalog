@@ -78,9 +78,9 @@ public class RouteRepository {
             stmt.execute(createRouteCategories);
             stmt.execute(dropFullRouteInfoView);
             stmt.execute(createFullRouteInfoView);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+         } catch (SQLException e) {
+             System.err.println("Ошибка создания таблиц базы данных: " + e.getMessage());
+         }
     }
 
     private void initializeDefaultCategories() {
@@ -105,11 +105,11 @@ public class RouteRepository {
                         pstmt.setString(4, cat[3]);
                         pstmt.executeUpdate();
                     }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+                 }
+             }
+         } catch (SQLException e) {
+             System.err.println("Ошибка инициализации категорий: " + e.getMessage());
+         }
     }
 
     public RouteLinkedList getAllRoutes() {
@@ -136,11 +136,11 @@ public class RouteRepository {
                         rs.getString("end_description"),
                         categoryCodes
                 );
-                routes.add(route);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+                 routes.add(route);
+             }
+         } catch (SQLException e) {
+             System.err.println("Ошибка получения маршрутов: " + e.getMessage());
+         }
         return routes;
     }
 
@@ -163,14 +163,14 @@ public class RouteRepository {
                              addRouteCategories(routeId, route.getSpecialCategories());
                          }
                         return true;
-                    }
-                }
-            }
-            return false;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+                     }
+                 }
+             }
+             return false;
+         } catch (SQLException e) {
+             System.err.println("Ошибка добавления маршрута: " + e.getMessage());
+             return false;
+         }
     }
 
     public boolean updateRoute(Route route) {
@@ -188,24 +188,24 @@ public class RouteRepository {
                 updateRouteCategories(route.getId(), route.getSpecialCategories());
                 return true;
             }
-            return false;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+             return false;
+         } catch (SQLException e) {
+             System.err.println("Ошибка обновления маршрута: " + e.getMessage());
+             return false;
+         }
     }
 
     public boolean deleteRoute(int routeId) {
         String sql = "DELETE FROM routes WHERE id = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, routeId);
-            pstmt.executeUpdate();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+              PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             pstmt.setInt(1, routeId);
+             pstmt.executeUpdate();
+             return true;
+         } catch (SQLException e) {
+             System.err.println("Ошибка удаления маршрута: " + e.getMessage());
+             return false;
+         }
     }
 
     public Category[] getAllCategories() {
@@ -217,10 +217,10 @@ public class RouteRepository {
             if (rs.next()) {
                 count = rs.getInt(1);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return new Category[0];
-        }
+         } catch (SQLException e) {
+             System.err.println("Ошибка подсчета категорий: " + e.getMessage());
+             return new Category[0];
+         }
 
         Category[] categories = new Category[count];
         String sql = "SELECT code, name, bg_color, text_color FROM categories";
@@ -236,11 +236,11 @@ public class RouteRepository {
                         rs.getString("name"),
                         rs.getString("bg_color"),
                         rs.getString("text_color")
-                );
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+                 );
+             }
+         } catch (SQLException e) {
+             System.err.println("Ошибка получения категорий: " + e.getMessage());
+         }
         return categories;
     }
 
@@ -253,11 +253,11 @@ public class RouteRepository {
                 pstmt.setString(2, code);
                 pstmt.executeUpdate();
             }
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+             return true;
+         } catch (SQLException e) {
+             System.err.println("Ошибка добавления категорий маршрута: " + e.getMessage());
+             return false;
+         }
     }
 
     public boolean updateRouteCategories(int routeId, String[] categoryCodes) {
@@ -267,10 +267,10 @@ public class RouteRepository {
              PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
             deleteStmt.setInt(1, routeId);
             deleteStmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+         } catch (SQLException e) {
+             System.err.println("Ошибка обновления категорий маршрута: " + e.getMessage());
+             return false;
+         }
 
         // Then add new
         return addRouteCategories(routeId, categoryCodes);

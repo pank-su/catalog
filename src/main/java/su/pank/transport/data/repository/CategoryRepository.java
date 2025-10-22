@@ -24,13 +24,13 @@ public class CategoryRepository {
                         rs.getString("code"),
                         rs.getString("name"),
                         rs.getString("bg_color"),
-                        rs.getString("text_color")
-                ));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return categories;
+                         rs.getString("text_color")
+                 ));
+             }
+         } catch (SQLException e) {
+             System.err.println("Ошибка получения категорий: " + e.getMessage());
+         }
+         return categories;
     }
 
     public Optional<Category> getCategoryByCode(String code) {
@@ -47,12 +47,12 @@ public class CategoryRepository {
                         rs.getString("name"),
                         rs.getString("bg_color"),
                         rs.getString("text_color")
-                ));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return Optional.empty();
+                 ));
+             }
+         } catch (SQLException e) {
+             System.err.println("Ошибка получения категории по коду: " + e.getMessage());
+         }
+         return Optional.empty();
     }
 
     public boolean updateCategory(Category category) {
@@ -63,11 +63,11 @@ public class CategoryRepository {
             pstmt.setString(2, category.getBgColor());
             pstmt.setString(3, category.getTextColor());
             pstmt.setString(4, category.getCode());
-            return pstmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+             return pstmt.executeUpdate() > 0;
+         } catch (SQLException e) {
+             System.err.println("Ошибка обновления категории: " + e.getMessage());
+             return false;
+         }
     }
 
     public static CategoryRepository getInstance() {
