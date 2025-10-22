@@ -1,7 +1,5 @@
 package su.pank.transport.data.models;
 
-import su.pank.transport.domain.LinkedList;
-import su.pank.transport.domain.SimpleLinkedList;
 
 public class Route {
     private int id;
@@ -15,7 +13,7 @@ public class Route {
     private String endDistrict;
     private String endDescription;
     private String[] specialCategories;
-    private String routeType;
+    private RouteType routeType;
 
     public Route(int id, int routeNumber, int startPointId, String startLocality, String startDistrict, String startDescription,
                  int endPointId, String endLocality, String endDistrict, String endDescription, String specialCategory) {
@@ -34,12 +32,12 @@ public class Route {
         this.routeType = determineRouteType(routeNumber);
     }
 
-    private String determineRouteType(int number) {
-        if (number >= 1 && number <= 199) return "Городской";
-        else if (number >= 200 && number <= 299) return "Смешанный";
-        else if (number >= 300 && number <= 399) return "Пригородный";
-        else if (number >= 400 && number <= 999) return "Региональный";
-        return "Неизвестный";
+    private RouteType determineRouteType(int number) {
+        if (number >= 1 && number <= 199) return RouteType.URBAN;
+        else if (number >= 200 && number <= 299) return RouteType.MIXED;
+        else if (number >= 300 && number <= 399) return RouteType.SUBURBAN;
+        else if (number >= 400 && number <= 999) return RouteType.REGIONAL;
+        return RouteType.UNKNOWN;
     }
 
     // Геттеры и сеттеры
@@ -83,23 +81,26 @@ public class Route {
         return String.join(",", specialCategories);
     }
 
-    public String getRouteType() { return routeType; }
+    public String getRouteType() { return routeType.getDisplayName(); }
 
     // Методы, связанные с UI (для совместимости, но идеально переместить в слой презентации)
     public String getBadgeColor() {
-        int num = getRouteNumber();
-        if (num >= 1 && num <= 199) return "#B8F1B9"; // City - Green
-        else if (num >= 200 && num <= 299) return "#DFE0FF"; // Mixed - Purple
-        else if (num >= 300 && num <= 399) return "#F9E287"; // Suburban - Yellow
-        return "#E3E9EA"; // Regional - Grey
+        return switch (routeType) {
+            case URBAN -> "#B8F1B9"; // Городской - Зеленый
+            case MIXED -> "#DFE0FF"; // Смешанный - Фиолетовый
+            case SUBURBAN -> "#F9E287"; // Пригородный - Желтый
+            case REGIONAL -> "#E3E9EA"; // Региональный - Серый
+            default -> "#E3E9EA"; // Неизвестный - Серый
+        };
     }
 
     public String getTextColor() {
-        int num = getRouteNumber();
-        if (num >= 1 && num <= 199) return "#1E5127";
-        else if (num >= 200 && num <= 299) return "#3B4279";
-        else if (num >= 300 && num <= 399) return "#534600";
-        return "#161D1D";
+        return switch (routeType) {
+            case URBAN -> "#1E5127";
+            case MIXED -> "#3B4279";
+            case SUBURBAN -> "#534600";
+            default -> "#161D1D";
+        };
     }
 
     public String getCategoryColor(String category) {
