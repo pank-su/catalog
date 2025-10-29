@@ -7,7 +7,9 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-
+/**
+ * Route для взаимодействия в пользовательском интерфейсе
+ */
 public class RouteUI {
     private final Route route;
     private final IntegerProperty id;

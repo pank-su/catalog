@@ -8,6 +8,7 @@ public class RouteLinkedList extends SimpleLinkedList<Route> {
         super(Route.class);
     }
 
+    // Удаление элемента
     public boolean remove(Route route) {
         if (head == null) return false;
 

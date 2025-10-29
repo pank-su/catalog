@@ -1,5 +1,6 @@
 package su.pank.transport.data.repository;
 
+import su.pank.transport.data.DatabaseConfig;
 import su.pank.transport.data.models.RoutePoint;
 import su.pank.transport.domain.SimpleLinkedList;
 import su.pank.transport.domain.LinkedList;
@@ -7,7 +8,6 @@ import su.pank.transport.domain.LinkedList;
 import java.sql.*;
 
 public class RoutePointRepository {
-    private static final String DB_URL = "jdbc:sqlite:transport_routes.db";
 
     public void initialize() {
         createTables();
@@ -24,7 +24,7 @@ public class RoutePointRepository {
             )
         """;
 
-        try (Connection conn = DriverManager.getConnection(DB_URL);
+        try (Connection conn = DriverManager.getConnection(DatabaseConfig.DB_URL);
               Statement stmt = conn.createStatement()) {
              stmt.execute(createRoutePoints);
          } catch (SQLException e) {
@@ -34,7 +34,7 @@ public class RoutePointRepository {
 
     private void initializeDefaultDepots() {
         String checkSql = "SELECT COUNT(*) FROM route_points";
-        try (Connection conn = DriverManager.getConnection(DB_URL);
+        try (Connection conn = DriverManager.getConnection(DatabaseConfig.DB_URL);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(checkSql)) {
 
@@ -67,7 +67,7 @@ public class RoutePointRepository {
     public RoutePoint[] getAllRoutePoints() {
         String countSql = "SELECT COUNT(*) FROM route_points";
         int count = 0;
-        try (Connection conn = DriverManager.getConnection(DB_URL);
+        try (Connection conn = DriverManager.getConnection(DatabaseConfig.DB_URL);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(countSql)) {
             if (rs.next()) {
@@ -81,7 +81,7 @@ public class RoutePointRepository {
         RoutePoint[] points = new RoutePoint[count];
         String sql = "SELECT id, locality, district, description FROM route_points";
 
-        try (Connection conn = DriverManager.getConnection(DB_URL);
+        try (Connection conn = DriverManager.getConnection(DatabaseConfig.DB_URL);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
@@ -102,7 +102,7 @@ public class RoutePointRepository {
 
     public boolean addRoutePoint(RoutePoint point) {
         String sql = "INSERT INTO route_points (locality, district, description) VALUES (?, ?, ?)";
-        try (Connection conn = DriverManager.getConnection(DB_URL);
+        try (Connection conn = DriverManager.getConnection(DatabaseConfig.DB_URL);
               PreparedStatement pstmt = conn.prepareStatement(sql)) {
              pstmt.setString(1, point.getLocality());
              pstmt.setString(2, point.getDistrict());
@@ -117,7 +117,7 @@ public class RoutePointRepository {
 
     public boolean deleteRoutePoint(int pointId) {
         String sql = "DELETE FROM route_points WHERE id = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL);
+        try (Connection conn = DriverManager.getConnection(DatabaseConfig.DB_URL);
               PreparedStatement pstmt = conn.prepareStatement(sql)) {
              pstmt.setInt(1, pointId);
              pstmt.executeUpdate();

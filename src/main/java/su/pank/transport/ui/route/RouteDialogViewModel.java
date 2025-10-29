@@ -35,6 +35,7 @@ public class RouteDialogViewModel {
         return routeRepository.updateRoute(route);
     }
 
+    // Валидация Route
     public boolean validateAndSaveRoute(String numText, RoutePoint start, RoutePoint end, String[] selectedCategories, Route existingRoute) {
         try {
             int routeNum = Integer.parseInt(numText);
