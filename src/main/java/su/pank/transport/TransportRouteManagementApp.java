@@ -20,11 +20,9 @@ public class TransportRouteManagementApp extends Application {
         RouteRepository routeRepository = new RouteRepository();
         RoutePointRepository routePointRepository = new RoutePointRepository();
 
-        // Инициализация viewmodel
         MainViewModel viewModel = new MainViewModel(routeRepository, routePointRepository);
         viewModel.initialize();
 
-        // Создание и отображение главного view
         MainView mainView = new MainView(viewModel, primaryStage);
         mainView.show();
     }

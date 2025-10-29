@@ -110,13 +110,13 @@ public class MainViewModel {
 
     public void importFromCSV(File file) throws IOException {
         LinkedList<RoutePoint> allPoints = new SimpleLinkedList<>(RoutePoint.class);
-        for (RoutePoint p : getAllRoutePoints()) {
-            allPoints.add(p);
+        for (RoutePoint point : getAllRoutePoints()) {
+            allPoints.add(point);
         }
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line = reader.readLine(); // Skip header
+            String line = reader.readLine(); // Пропуск заголовков
             while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1); // Split CSV with quotes
+                String[] parts = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1); // Разделение CSV с кавычками
                 if (parts.length < 6) continue;
                 try {
                     int routeNumber = Integer.parseInt(parts[1].trim());
@@ -131,19 +131,16 @@ public class MainViewModel {
                             startPoint.getDistrict(), startPoint.getDescription(),
                             endPoint.getId(), endPoint.getLocality(), endPoint.getDistrict(),
                             endPoint.getDescription(), specialCategory);
-                    if (!addRoute(route)) {
-                        // Route with this number already exists, skip
-                    }
+                    addRoute(route);
                 } catch (Exception e) {
-                    // Skip invalid lines
+                    // Пропуск невалидных строк
                 }
             }
         }
-        loadAllRoutes(); // Refresh the list
+        loadAllRoutes(); // Обновление списка
     }
 
     private RoutePoint findOrCreateRoutePoint(String pointStr, LinkedList<RoutePoint> allPoints) {
-        // Parse "description (locality, district)"
         String description = pointStr;
         String locality = "";
         String district = "";
@@ -161,14 +158,12 @@ public class MainViewModel {
             }
         }
 
-        // Find existing
         for (RoutePoint p : allPoints.toArray()) {
             if (p.getDescription().equals(description)) {
                 return p;
             }
         }
 
-        // Create new
         RoutePoint newPoint = new RoutePoint(0, locality, district, description);
         addRoutePoint(newPoint);
         allPoints.add(newPoint);

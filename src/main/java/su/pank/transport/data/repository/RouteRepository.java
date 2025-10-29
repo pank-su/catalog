@@ -184,7 +184,7 @@ public class RouteRepository {
             int affectedRows = pstmt.executeUpdate();
 
             if (affectedRows > 0) {
-                // Update categories
+                // Обновление категорий
                 updateRouteCategories(route.getId(), route.getSpecialCategories());
                 return true;
             }

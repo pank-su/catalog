@@ -47,12 +47,12 @@ public class CategoryRepository {
     public static String getCategoryBgColor(String code) {
         return getInstance().getCategoryByCode(code)
                 .map(Category::getBgColor)
-                .orElse("#95A5A6"); // Default grey
+                .orElse("#95A5A6"); // Серый по умолчанию
     }
 
     public static String getCategoryTextColor(String code) {
         return getInstance().getCategoryByCode(code)
                 .map(Category::getTextColor)
-                .orElse("#34495E"); // Default dark grey
+                .orElse("#34495E"); // Темно-серый по умолчанию
     }
 }

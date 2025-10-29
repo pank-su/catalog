@@ -74,7 +74,6 @@ public class RouteUI {
     public String getRouteType() { return routeType.get(); }
     public StringProperty routeTypeProperty() { return routeType; }
 
-    // Delegate UI methods to route
     public String getBadgeColor() { return route.getBadgeColor(); }
     public String getTextColor() { return route.getTextColor(); }
     public String getCategoryColor(String category) { return route.getCategoryColor(category); }

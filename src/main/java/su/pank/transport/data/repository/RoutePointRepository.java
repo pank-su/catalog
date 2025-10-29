@@ -129,6 +129,6 @@ public class RoutePointRepository {
     }
 
     public void close() {
-        // SQLite doesn't need explicit close for the database
+        // SQLite не требует явного закрытия базы данных
     }
 }

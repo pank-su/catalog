@@ -40,7 +40,7 @@ public class MainView {
         primaryStage.setTitle("Каталог маршрутов");
         primaryStage.setScene(scene);
         primaryStage.setOnCloseRequest(e -> {
-            // Close repositories if needed
+            // Закрыть репозитории при необходимости
         });
         primaryStage.show();
     }
@@ -101,11 +101,46 @@ public class MainView {
         return btn;
     }
 
-    private TableView<RouteUI> createRouteTable() {
-        TableView<RouteUI> table = new TableView<>();
-        table.setStyle("-fx-background-color: white; -fx-background-radius: 12;");
+    private HBox createBadgeHBox(RouteUI route) {
+        HBox hbox = new HBox(4);
+        hbox.setAlignment(Pos.CENTER);
 
-        // ID Column with colored badge and categories
+        Label numberBadge = new Label(String.valueOf(route.getRouteNumber()));
+        numberBadge.setStyle(String.format(
+                "-fx-background-color: %s; -fx-background-radius: 33; " +
+                        "-fx-padding: 0 8; -fx-text-fill: %s; " +
+                        "-fx-font-family: 'Roboto'; -fx-font-weight: 500; -fx-font-size: 11;",
+                route.getBadgeColor(), route.getTextColor()
+        ));
+
+        hbox.getChildren().add(numberBadge);
+
+        for (String cat : route.getSpecialCategories()) {
+            Label catBadge = new Label(cat);
+            catBadge.setStyle(String.format(
+                    "-fx-background-color: %s; -fx-background-radius: 33; " +
+                            "-fx-padding: 0 6; -fx-text-fill: %s; " +
+                            "-fx-font-family: 'Roboto'; -fx-font-weight: 500; -fx-font-size: 9;",
+                    route.getCategoryColor(cat), route.getCategoryTextColor(cat)
+            ));
+            Tooltip tooltip = new Tooltip(getCategoryName(cat));
+            Tooltip.install(catBadge, tooltip);
+            hbox.getChildren().add(catBadge);
+        }
+
+        return hbox;
+    }
+
+    private HBox createPointCell(su.pank.transport.data.models.RoutePoint item) {
+        Label descLabel = new Label(item.getDescription());
+        Label locLabel = new Label(" (" + item.getLocality() + ", " + item.getDistrict() + ")");
+        locLabel.setStyle("-fx-text-fill: gray;");
+        HBox hbox = new HBox(descLabel, locLabel);
+        hbox.setAlignment(Pos.CENTER);
+        return hbox;
+    }
+
+    private TableColumn<RouteUI, Integer> createIdColumn() {
         TableColumn<RouteUI, Integer> idCol = new TableColumn<>("Id");
         idCol.setCellValueFactory(new PropertyValueFactory<>("routeNumber"));
         idCol.setPrefWidth(120);
@@ -117,39 +152,15 @@ public class MainView {
                     setGraphic(null);
                 } else {
                     RouteUI route = getTableView().getItems().get(getIndex());
-                    HBox hbox = new HBox(4);
-                    hbox.setAlignment(Pos.CENTER);
-
-                    Label numberBadge = new Label(item.toString());
-                    numberBadge.setStyle(String.format(
-                            "-fx-background-color: %s; -fx-background-radius: 33; " +
-                                    "-fx-padding: 0 8; -fx-text-fill: %s; " +
-                                    "-fx-font-family: 'Roboto'; -fx-font-weight: 500; -fx-font-size: 11;",
-                            route.getBadgeColor(), route.getTextColor()
-                    ));
-
-                    hbox.getChildren().add(numberBadge);
-
-                    for (String cat : route.getSpecialCategories()) {
-                        Label catBadge = new Label(cat);
-                        catBadge.setStyle(String.format(
-                                "-fx-background-color: %s; -fx-background-radius: 33; " +
-                                        "-fx-padding: 0 6; -fx-text-fill: %s; " +
-                                        "-fx-font-family: 'Roboto'; -fx-font-weight: 500; -fx-font-size: 9;",
-                                route.getCategoryColor(cat), route.getCategoryTextColor(cat)
-                        ));
-                        Tooltip tooltip = new Tooltip(getCategoryName(cat));
-                        Tooltip.install(catBadge, tooltip);
-                        hbox.getChildren().add(catBadge);
-                    }
-
-                    setGraphic(hbox);
+                    setGraphic(createBadgeHBox(route));
                     setAlignment(Pos.CENTER);
                 }
             }
         });
+        return idCol;
+    }
 
-        // Start Point Column
+    private TableColumn<RouteUI, su.pank.transport.data.models.RoutePoint> createStartPointColumn() {
         TableColumn<RouteUI, su.pank.transport.data.models.RoutePoint> startCol = new TableColumn<>("Начальный пункт");
         startCol.setCellValueFactory(new PropertyValueFactory<>("startPoint"));
         startCol.setCellFactory(col -> new TableCell<RouteUI, su.pank.transport.data.models.RoutePoint>() {
@@ -159,18 +170,15 @@ public class MainView {
                 if (empty || item == null) {
                     setGraphic(null);
                 } else {
-                    Label descLabel = new Label(item.getDescription());
-                    Label locLabel = new Label(" (" + item.getLocality() + ", " + item.getDistrict() + ")");
-                    locLabel.setStyle("-fx-text-fill: gray;");
-                    HBox hbox = new HBox(descLabel, locLabel);
-                    hbox.setAlignment(Pos.CENTER);
-                    setGraphic(hbox);
+                    setGraphic(createPointCell(item));
                 }
                 setAlignment(Pos.CENTER);
             }
         });
+        return startCol;
+    }
 
-        // End Point Column
+    private TableColumn<RouteUI, su.pank.transport.data.models.RoutePoint> createEndPointColumn() {
         TableColumn<RouteUI, su.pank.transport.data.models.RoutePoint> endCol = new TableColumn<>("Конечный пункт");
         endCol.setCellValueFactory(new PropertyValueFactory<>("endPoint"));
         endCol.setCellFactory(col -> new TableCell<RouteUI, su.pank.transport.data.models.RoutePoint>() {
@@ -180,16 +188,21 @@ public class MainView {
                 if (empty || item == null) {
                     setGraphic(null);
                 } else {
-                    Label descLabel = new Label(item.getDescription());
-                    Label locLabel = new Label(" (" + item.getLocality() + ", " + item.getDistrict() + ")");
-                    locLabel.setStyle("-fx-text-fill: gray;");
-                    HBox hbox = new HBox(descLabel, locLabel);
-                    hbox.setAlignment(Pos.CENTER);
-                    setGraphic(hbox);
+                    setGraphic(createPointCell(item));
                 }
                 setAlignment(Pos.CENTER);
             }
         });
+        return endCol;
+    }
+
+    private TableView<RouteUI> createRouteTable() {
+        TableView<RouteUI> table = new TableView<>();
+        table.setStyle("-fx-background-color: white; -fx-background-radius: 12;");
+
+        TableColumn<RouteUI, Integer> idCol = createIdColumn();
+        TableColumn<RouteUI, su.pank.transport.data.models.RoutePoint> startCol = createStartPointColumn();
+        TableColumn<RouteUI, su.pank.transport.data.models.RoutePoint> endCol = createEndPointColumn();
 
         table.getColumns().addAll(idCol, startCol, endCol);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
@@ -275,14 +288,14 @@ public class MainView {
         RouteDialogViewModel routeVM = new RouteDialogViewModel(viewModel.getRouteRepository(), viewModel.getRoutePointRepository());
         RouteView dialog = new RouteView(routeVM, null);
         dialog.showAndWait();
-        viewModel.loadAllRoutes(); // Refresh main view
+        viewModel.loadAllRoutes(); // Обновление главного представления
     }
 
     private void showEditRouteDialog(Route route) {
         RouteDialogViewModel routeVM = new RouteDialogViewModel(viewModel.getRouteRepository(), viewModel.getRoutePointRepository());
         RouteView dialog = new RouteView(routeVM, route);
         dialog.showAndWait();
-        viewModel.loadAllRoutes(); // Refresh main view
+        viewModel.loadAllRoutes(); // Обновление главного представления
     }
 
     private void showDepotsDialog() {
