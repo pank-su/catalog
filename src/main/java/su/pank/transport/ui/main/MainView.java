@@ -1,21 +1,25 @@
 package su.pank.transport.ui.main;
 
-import su.pank.transport.data.models.Route;
-import su.pank.transport.ui.route.RouteView;
-import su.pank.transport.ui.route.RouteDialogViewModel;
-import su.pank.transport.ui.depots.DepotsView;
-import su.pank.transport.ui.depots.DepotsViewModel;
-
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.scene.shape.SVGPath;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import su.pank.transport.data.models.Route;
+import su.pank.transport.ui.depots.DepotsView;
+import su.pank.transport.ui.depots.DepotsViewModel;
+import su.pank.transport.ui.route.RouteDialogViewModel;
+import su.pank.transport.ui.route.RouteView;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,9 +43,6 @@ public class MainView {
 
         primaryStage.setTitle("Каталог маршрутов");
         primaryStage.setScene(scene);
-        primaryStage.setOnCloseRequest(e -> {
-            // Закрыть репозитории при необходимости
-        });
         primaryStage.show();
     }
 
@@ -81,7 +82,7 @@ public class MainView {
         title.setMaxWidth(Double.MAX_VALUE);
         title.setAlignment(Pos.CENTER);
 
-        Button searchBtn = createIconButton("🔍");
+        Button searchBtn = createSearchButton();
         searchBtn.setOnAction(e -> showSearchDialog());
 
         Button addBtn = createIconButton("+");
@@ -100,6 +101,27 @@ public class MainView {
         btn.setPrefSize(48, 48);
         return btn;
     }
+
+private Button createSearchButton() {
+    Button btn = new Button();
+
+    SVGPath searchIcon = new SVGPath();
+    searchIcon.setContent("M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z");
+    searchIcon.setFill(javafx.scene.paint.Color.web("#1f1f1f"));
+
+    Group iconGroup = new Group(searchIcon);
+    iconGroup.setScaleX(0.02);
+    iconGroup.setScaleY(0.02);
+    iconGroup.setTranslateX(480 * 0.02);
+
+    btn.setGraphic(iconGroup);
+    btn.setStyle("-fx-background-color: transparent; -fx-padding: 10;");
+    btn.setMinSize(48, 48);
+    btn.setPrefSize(48, 48);
+    btn.setMaxSize(48, 48);
+
+    return btn;
+}
 
     private HBox createBadgeHBox(RouteUI route) {
         HBox hbox = new HBox(4);
@@ -123,8 +145,6 @@ public class MainView {
                             "-fx-font-family: 'Roboto'; -fx-font-weight: 500; -fx-font-size: 9;",
                     route.getCategoryColor(cat), route.getCategoryTextColor(cat)
             ));
-            Tooltip tooltip = new Tooltip(getCategoryName(cat));
-            Tooltip.install(catBadge, tooltip);
             hbox.getChildren().add(catBadge);
         }
 
@@ -199,6 +219,9 @@ public class MainView {
     private TableView<RouteUI> createRouteTable() {
         TableView<RouteUI> table = new TableView<>();
         table.setStyle("-fx-background-color: white; -fx-background-radius: 12;");
+
+        Label placeholder = new Label("Нет данных в таблице");
+        table.setPlaceholder(placeholder);
 
         TableColumn<RouteUI, Integer> idCol = createIdColumn();
         TableColumn<RouteUI, su.pank.transport.data.models.RoutePoint> startCol = createStartPointColumn();
@@ -348,14 +371,6 @@ public class MainView {
         alert.showAndWait();
     }
 
-    private String getCategoryName(String code) {
-        return switch (code) {
-            case "K" -> "Коммерческий";
-            case "S" -> "Экспресс";
-            case "M" -> "Ночной";
-            default -> "";
-        };
-    }
 
     private String getCSS() {
         return """
