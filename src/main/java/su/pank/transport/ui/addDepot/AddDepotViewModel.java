@@ -17,11 +17,21 @@ public class AddDepotViewModel {
         return routePointRepository.addRoutePoint(point);
     }
 
-    public boolean validateAndAddRoutePoint(String locality, String district, String description) {
-        if (locality.isEmpty() || district.isEmpty() || description.isEmpty()) {
-            return false;
+    public String validateAndAddRoutePoint(String locality, String district, String description) {
+        // Проверка на пустые поля
+        if (locality == null || locality.trim().isEmpty() || 
+            district == null || district.trim().isEmpty() || 
+            description == null || description.trim().isEmpty()) {
+            return "Все поля должны быть заполнены.";
         }
-        RoutePoint point = new RoutePoint(0, locality, district, description);
-        return addRoutePoint(point);
+
+        RoutePoint point = new RoutePoint(0, locality.trim(), district.trim(), description.trim());
+        boolean success = addRoutePoint(point);
+        
+        if (success) {
+            return null; // null означает успех
+        } else {
+            return "Не удалось добавить депо. Попробуйте еще раз.";
+        }
     }
 }

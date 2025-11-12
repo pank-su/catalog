@@ -49,10 +49,14 @@ public class AddDepotView extends Dialog<RoutePoint> {
                 String locality = localityField.getText();
                 String district = districtField.getText();
                 String description = descField.getText();
-                if (viewModel.validateAndAddRoutePoint(locality, district, description)) {
-                    return new RoutePoint(0, locality, district, description);
+                
+                String errorMsg = viewModel.validateAndAddRoutePoint(locality, district, description);
+                if (errorMsg == null) {
+                    // Успешно добавлено
+                    return new RoutePoint(0, locality.trim(), district.trim(), description.trim());
                 } else {
-                    showAlert("Ошибка", "Все поля обязательны");
+                    // Показываем ошибку
+                    showAlert("Ошибка", errorMsg);
                     return null;
                 }
             }

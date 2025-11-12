@@ -118,12 +118,10 @@ public class RouteView extends Stage {
             }
             String[] finalSelected = java.util.Arrays.copyOf(selectedCategories, selectedCount);
 
-            if (viewModel.validateAndSaveRoute(numField.getText(), start, end, finalSelected, existingRoute)) {
+            String errorMsg = viewModel.validateAndSaveRoute(numField.getText(), start, end, finalSelected, existingRoute);
+            if (errorMsg == null) {
                 close();
             } else {
-                String errorMsg = existingRoute == null ?
-                    "Не удалось добавить маршрут. Возможно, такой номер уже существует." :
-                    "Не удалось обновить маршрут";
                 showAlert("Ошибка", errorMsg);
             }
         });

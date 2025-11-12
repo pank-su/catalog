@@ -276,5 +276,21 @@ public class RouteRepository {
         return addRouteCategories(routeId, categoryCodes);
     }
 
+    public boolean isRouteNumberExists(int routeNumber) {
+        String sql = "SELECT COUNT(*) FROM routes WHERE route_number = ?";
+        try (Connection conn = DriverManager.getConnection(DatabaseConfig.DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, routeNumber);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Ошибка проверки существования маршрута: " + e.getMessage());
+        }
+        return false;
+    }
+
 
 }
