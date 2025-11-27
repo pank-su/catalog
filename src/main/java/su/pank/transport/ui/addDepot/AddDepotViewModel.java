@@ -26,6 +26,11 @@ public class AddDepotViewModel {
         }
 
         RoutePoint point = new RoutePoint(0, locality.trim(), district.trim(), description.trim());
+
+        if (routePointRepository.exists(point)) {
+            return "Такое депо уже существует.";
+        }
+
         boolean success = addRoutePoint(point);
         
         if (success) {

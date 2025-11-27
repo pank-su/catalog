@@ -100,6 +100,24 @@ public class RoutePointRepository {
         return points;
     }
 
+    public boolean exists(RoutePoint point) {
+        String sql = "SELECT COUNT(*) FROM route_points WHERE locality = ? AND district = ? AND description = ?";
+        try (Connection conn = DriverManager.getConnection(DatabaseConfig.DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, point.getLocality());
+            pstmt.setString(2, point.getDistrict());
+            pstmt.setString(3, point.getDescription());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Ошибка проверки существования точки маршрута: " + e.getMessage());
+        }
+        return false;
+    }
+
     public boolean addRoutePoint(RoutePoint point) {
         String sql = "INSERT INTO route_points (locality, district, description) VALUES (?, ?, ?)";
         try (Connection conn = DriverManager.getConnection(DatabaseConfig.DB_URL);
