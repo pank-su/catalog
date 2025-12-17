@@ -29,12 +29,18 @@ public class MainViewModel {
         this.observableRoutes = FXCollections.observableArrayList();
     }
 
+    /**
+     * Старт работы
+     */
     public void initialize() {
         routeRepository.initialize();
         routePointRepository.initialize();
         loadAllRoutes();
     }
 
+    /**
+     * Загрузка точек из базы данных
+     */
     public void loadAllRoutes() {
         routes.clear();
         RouteLinkedList dbRoutes = routeRepository.getAllRoutes();
@@ -51,6 +57,11 @@ public class MainViewModel {
         return observableRoutes;
     }
 
+    /**
+     * Добавление точки
+     * @param route
+     * @return true если точка добавлена
+     */
     public boolean addRoute(Route route) {
         if (routeRepository.addRoute(route)) {
             loadAllRoutes();
@@ -108,6 +119,11 @@ public class MainViewModel {
         }
     }
 
+    /**
+     * Импорт из CSB
+     * @param file
+     * @throws IOException
+     */
     public void importFromCSV(File file) throws IOException {
         LinkedList<RoutePoint> allPoints = new SimpleLinkedList<>(RoutePoint.class);
         for (RoutePoint point : getAllRoutePoints()) {
@@ -140,6 +156,12 @@ public class MainViewModel {
         loadAllRoutes(); // Обновление списка
     }
 
+    /**
+     * Вспомогательная функция для импорта точки из CSB
+     * @param pointStr строка точки
+     * @param allPoints все точки
+     * @return найденную точку или созданную
+     */
     private RoutePoint findOrCreateRoutePoint(String pointStr, LinkedList<RoutePoint> allPoints) {
         String description = pointStr;
         String locality = "";
@@ -170,14 +192,27 @@ public class MainViewModel {
         return newPoint;
     }
 
+    /**
+     * @return точки из БД
+     */
     public RoutePoint[] getAllRoutePoints() {
         return routePointRepository.getAllRoutePoints();
     }
 
+    /**
+     * Добавление точки
+     * @param point
+     * @return true если корректно добавлена
+     */
     public boolean addRoutePoint(RoutePoint point) {
         return routePointRepository.addRoutePoint(point);
     }
 
+    /**
+     * Удаление точки
+     * @param point
+     * @return true если всё прошло успешно
+     */
     public boolean deleteRoutePoint(RoutePoint point) {
         return routePointRepository.deleteRoutePoint(point.getId());
     }
@@ -186,10 +221,12 @@ public class MainViewModel {
         return routeRepository.getAllCategories();
     }
 
+    // Getter
     public RouteRepository getRouteRepository() {
         return routeRepository;
     }
 
+    // Getter
     public RoutePointRepository getRoutePointRepository() {
         return routePointRepository;
     }

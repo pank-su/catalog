@@ -69,6 +69,7 @@ public class MainView {
         return root;
     }
 
+    // AppBar
     private HBox createAppBar() {
         HBox appBar = new HBox();
         appBar.setStyle("-fx-background-color: #FFFFFF; -fx-padding: 8 4;");
@@ -95,6 +96,7 @@ public class MainView {
         return appBar;
     }
 
+    // Вспомогательная функция для создания иконки из emoji
     private Button createIconButton(String text) {
         Button btn = new Button(text);
         btn.setStyle("-fx-background-color: transparent; -fx-font-size: 18; -fx-padding: 10;");
@@ -102,26 +104,27 @@ public class MainView {
         return btn;
     }
 
-private Button createSearchButton() {
-    Button btn = new Button();
+    // Создание иконки пользователя
+    private Button createSearchButton() {
+        Button btn = new Button();
 
-    SVGPath searchIcon = new SVGPath();
-    searchIcon.setContent("M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z");
-    searchIcon.setFill(javafx.scene.paint.Color.web("#1f1f1f"));
+        SVGPath searchIcon = new SVGPath();
+        searchIcon.setContent("M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z");
+        searchIcon.setFill(javafx.scene.paint.Color.web("#1f1f1f"));
 
-    Group iconGroup = new Group(searchIcon);
-    iconGroup.setScaleX(0.02);
-    iconGroup.setScaleY(0.02);
-    iconGroup.setTranslateX(480 * 0.02);
+        Group iconGroup = new Group(searchIcon);
+        iconGroup.setScaleX(0.02);
+        iconGroup.setScaleY(0.02);
+        iconGroup.setTranslateX(480 * 0.02);
 
-    btn.setGraphic(iconGroup);
-    btn.setStyle("-fx-background-color: transparent; -fx-padding: 10;");
-    btn.setMinSize(48, 48);
-    btn.setPrefSize(48, 48);
-    btn.setMaxSize(48, 48);
+        btn.setGraphic(iconGroup);
+        btn.setStyle("-fx-background-color: transparent; -fx-padding: 10;");
+        btn.setMinSize(48, 48);
+        btn.setPrefSize(48, 48);
+        btn.setMaxSize(48, 48);
 
-    return btn;
-}
+        return btn;
+    }
 
     private HBox createBadgeHBox(RouteUI route) {
         HBox hbox = new HBox(4);
@@ -159,6 +162,8 @@ private Button createSearchButton() {
         hbox.setAlignment(Pos.CENTER);
         return hbox;
     }
+
+    // Создание столбцов таблицы
 
     private TableColumn<RouteUI, Integer> createIdColumn() {
         TableColumn<RouteUI, Integer> idCol = new TableColumn<>("Id");
@@ -216,6 +221,7 @@ private Button createSearchButton() {
         return endCol;
     }
 
+    // Создание таблицы
     private TableView<RouteUI> createRouteTable() {
         TableView<RouteUI> table = new TableView<>();
         table.setStyle("-fx-background-color: white; -fx-background-radius: 12;");
@@ -244,6 +250,7 @@ private Button createSearchButton() {
         return table;
     }
 
+    // Создание нижней панели
     private HBox createButtonBar() {
         Button sortBtn = new Button("Сортировать");
         sortBtn.setOnAction(e -> {
@@ -279,6 +286,7 @@ private Button createSearchButton() {
         return bar;
     }
 
+    // Диалог поиска
     private void showSearchDialog() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Поиск маршрута");
@@ -306,6 +314,7 @@ private Button createSearchButton() {
             }
         });
     }
+
 
     private void showAddRouteDialog() {
         RouteDialogViewModel routeVM = new RouteDialogViewModel(viewModel.getRouteRepository(), viewModel.getRoutePointRepository());
@@ -371,7 +380,7 @@ private Button createSearchButton() {
         alert.showAndWait();
     }
 
-
+    // Стили
     private String getCSS() {
         return """
                     .table-view {

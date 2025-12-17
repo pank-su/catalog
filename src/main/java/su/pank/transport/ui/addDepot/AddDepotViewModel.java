@@ -13,10 +13,18 @@ public class AddDepotViewModel {
         this.routePointRepository = routePointRepository;
     }
 
+    /**
+     * Добавление точки
+     * @param point
+     * @return true если добавлена
+     */
     public boolean addRoutePoint(RoutePoint point) {
         return routePointRepository.addRoutePoint(point);
     }
 
+    /**
+     * @return Ошибка, иначе null
+     */
     public String validateAndAddRoutePoint(String locality, String district, String description) {
         // Проверка на пустые поля
         if (locality == null || locality.trim().isEmpty() || 
